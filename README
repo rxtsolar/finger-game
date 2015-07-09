@@ -1,0 +1,10 @@
+Game Description:
+
+A group of players (usually two) start with everyone's 1 left finger and
+1 right finger.
+
+Players play in turn. In each turn, a player could choose to add one of
+the opponent's hand to one of his/her own. One hand could only express
+number from 1 to 10.
+
+Until a player could not make any moves, he/she would be lost.
