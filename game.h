@@ -17,40 +17,36 @@ public:
 
 class Game {
 public:
-	Game(int n) : total(n), turn(0), players(n) { }
+	Game(int n) : turn(0), players(n) { }
 	void start(void)
 	{
-		while (playerHasMove(turn)) {
-			playerMakesMove(turn);
-			turn = (turn + 1) % total;
+		while (playerHasMove()) {
+			playerMakesMove();
+			turn = (turn + 1) % 2;
 		}
 	}
 
 private:
-	int total;
 	int turn;
 	vector<Player> players;
 
-	bool playerHasMove(int t)
+	bool playerHasMove()
 	{
-		for (int i = 0; i < total; i++) {
-			if (i == t)
-				continue;
-			if (players[t].left + players[i].left <= 10)
-				return true;
-			if (players[t].left + players[i].right <= 10)
-				return true;
-			if (players[t].right + players[i].left <= 10)
-				return true;
-			if (players[t].right + players[i].right <= 10)
-				return true;
-		}
+		if (players[turn].left + players[1 - turn].left <= 10)
+			return true;
+		if (players[turn].left + players[1 - turn].right <= 10)
+			return true;
+		if (players[turn].right + players[1 - turn].left <= 10)
+			return true;
+		if (players[turn].right + players[1 - turn].right <= 10)
+			return true;
+
 		cout << "No valid moves left!" << endl;
-		cout << "Player " << t << " has lost the game!" << endl;
+		cout << "Player " << 1 - turn << " has won the game!" << endl;
 		return false;
 	}
 
-	void playerMakesMove(int t)
+	void playerMakesMove()
 	{
 		while (true) {
 			string selfHand;
@@ -60,33 +56,32 @@ private:
 			int playerNumber;
 
 			cout << "*********************************" << endl;
-			for (int i = 0; i < total; i++)
+			for (int i = 0; i < 2; i++)
 				cout << "* Player " << i << ": left " << players[i].left << ", right " << players[i].right << endl;
 			cout << "*********************************" << endl;
-			cout << "Player " << t << "'s move: " << endl;
+			cout << "Player " << turn << "'s move: " << endl;
 
-			cin >> selfHand >> player >> playerHand;
-			if (player < 0 || player >= total)
-				continue;
+			cin >> selfHand >> playerHand;
+
 			if (selfHand != "left" && selfHand != "right")
 				continue;
 			if (playerHand != "left" && playerHand != "right")
 				continue;
 
 			if (selfHand == "left")
-				selfNumber = players[t].left;
+				selfNumber = players[turn].left;
 			else if (selfHand == "right")
-				selfNumber = players[t].right;
+				selfNumber = players[turn].right;
 			if (playerHand == "left")
-				playerNumber = players[player].left;
+				playerNumber = players[1 - turn].left;
 			else if (playerHand == "right")
-				playerNumber = players[player].right;
+				playerNumber = players[1 - turn].right;
 
 			if (selfNumber + playerNumber <= 10) {
 				if (selfHand == "left")
-					players[t].left += playerNumber;
+					players[turn].left += playerNumber;
 				else if (selfHand == "right")
-					players[t].right += playerNumber;
+					players[turn].right += playerNumber;
 				break;
 			}
 		}
