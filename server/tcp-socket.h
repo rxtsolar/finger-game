@@ -14,6 +14,8 @@
 
 namespace gs {
 
+using namespace std;
+
 class TCPSocket {
 public:
 	TCPSocket(void)
