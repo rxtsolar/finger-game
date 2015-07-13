@@ -103,10 +103,11 @@ protected:
 
 class ServerTCPSocket : public TCPSocket {
 public:
-	ServerTCPSocket(int listeners)
+	ServerTCPSocket(int port, int listeners)
 	{
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		acceptLen = sizeof(acceptAddr);
+		setPort(port);
 
 		if (bind(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {
 			perror("bind");
