@@ -19,12 +19,22 @@ public:
 	TCPSocket(void)
 	{
 		addr.sin_family = AF_INET;
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock < 0) {
+			perror("socket");
+			exit(-1);
+		}
 	}
 
 	TCPSocket(int fd)
 	{
 		sock = fd;
 		addr.sin_family = AF_INET;
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock < 0) {
+			perror("socket");
+			exit(-1);
+		}
 	}
 
 	void setSocket(int fd)
@@ -35,15 +45,6 @@ public:
 	int getSocket(void) const
 	{
 		return sock;
-	}
-
-	void createSocket(void)
-	{
-		sock = socket(AF_INET, SOCK_STREAM, 0);
-		if (sock < 0) {
-			perror("socket");
-			exit(-1);
-		}
 	}
 
 	bool setIP(const string& ip)
@@ -100,33 +101,79 @@ protected:
 	sockaddr_in addr;
 };
 
-class ListenTCPSocket : public TCPSocket {
+class ServerTCPSocket : public TCPSocket {
 public:
-	ListenTCPSocket(void)
+	ServerTCPSocket(int listeners)
 	{
-		createSocket();
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		acceptLen = sizeof(acceptAddr);
+
+		if (bind(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {
+			perror("bind");
+			exit(-1);
+		}
+
+		if (listen(sock, listeners)) {
+			perror("listen");
+			exit(-1);
+		}
 	}
 
-	int bindSocket(void) const
+	void acceptSocket(void)
 	{
-		return bind(sock, (sockaddr*)&addr, sizeof(addr));
+		int s = accept(sock, (sockaddr*)&acceptAddr, &acceptLen);
+		if (s < 0) {
+			perror("accept");
+			exit(-1);
+		}
+		connectSock.setSocket(s);
 	}
 
-	int listenSocket(int n) const
+	void sendMessage(const string& message) const
 	{
-		return listen(sock, n);
+		connectSock.sendSocket(message);
 	}
 
-	int acceptSocket(void)
+	string getMessage(void) const
 	{
-		return accept(sock, (sockaddr*)&acceptAddr, &acceptLen);
+		string message;
+		connectSock.recvSocket(message);
+		return message;
 	}
 
 protected:
+	TCPSocket connectSock;
 	sockaddr_in acceptAddr;
 	socklen_t acceptLen;
+};
+
+class ClientTCPSocket : public TCPSocket {
+public:
+	ClientTCPSocket(const string& ip, int port)
+	{
+		setIP(ip);
+		setPort(port);
+	}
+
+	void connectSocket(void)
+	{
+		if (connect(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {
+			perror("connect");
+			exit(-1);
+		}
+	}
+
+	void sendMessage(const string& message)
+	{
+		sendSocket(message);
+	}
+
+	string getMessage(void)
+	{
+		string message;
+		recvSocket(message);
+		return message;
+	}
 };
 
 }
