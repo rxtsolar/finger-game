@@ -1,5 +1,5 @@
-#ifndef _GS_SOCKET_H_
-#define _GS_SOCKET_H_
+#ifndef _GS_TCP_SOCKET_H_
+#define _GS_TCP_SOCKET_H_
 
 #include <iostream>
 #include <string>
