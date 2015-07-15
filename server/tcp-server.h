@@ -4,6 +4,7 @@
 #include "../tcp-socket.h"
 
 #include <iostream>
+#include <thread>
 
 namespace gs {
 
@@ -28,6 +29,7 @@ public:
 			if (serverSock.getMessage(message)) {
 				cout << "got message: " << message << endl;
 			} else {
+				serverSock.closeSocket();
 				cout << "disconnected" << endl;
 				break;
 			}

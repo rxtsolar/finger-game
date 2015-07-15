@@ -127,6 +127,7 @@ class ServerTCPSocket : public TCPSocket {
 public:
 	ServerTCPSocket(int port, int listeners)
 	{
+		maxThreads = listeners;
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		acceptLen = sizeof(acceptAddr);
 		setPort(port);
@@ -136,10 +137,15 @@ public:
 			exit(-1);
 		}
 
-		if (listen(sock, listeners)) {
+		if (listen(sock, maxThreads)) {
 			perror("listen");
 			exit(-1);
 		}
+	}
+
+	~ServerTCPSocket(void)
+	{
+		closeSocket();
 	}
 
 	void acceptSocket(void)
@@ -150,6 +156,11 @@ public:
 			exit(-1);
 		}
 		connectSock.setSocket(s);
+	}
+
+	void closeSocket(void)
+	{
+		connectSock.closeSocket();
 	}
 
 	void setRecvTimeout(int seconds)
@@ -184,6 +195,7 @@ protected:
 	TCPSocket connectSock;
 	sockaddr_in acceptAddr;
 	socklen_t acceptLen;
+	unsigned int maxThreads;
 };
 
 class ClientTCPSocket : public TCPSocket {
