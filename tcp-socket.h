@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -65,6 +66,24 @@ public:
 		addr.sin_port = htons(port);
 	}
 
+	int setRecvTimeout(int seconds)
+	{
+		timeval timeout;
+		timeout.tv_sec = seconds;
+		timeout.tv_usec = 0;
+		return setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+				(char*)&timeout, sizeof(timeout));
+	}
+
+	int setSendTimeout(int seconds)
+	{
+		timeval timeout;
+		timeout.tv_sec = seconds;
+		timeout.tv_usec = 0;
+		return setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO,
+				(char*)&timeout, sizeof(timeout));
+	}
+
 	int sendSocket(const char* data, int len) const
 	{
 		return send(sock, data, len, 0);
@@ -83,6 +102,7 @@ public:
 	int recvSocket(string& data) const
 	{
 		char buffer[2048];
+		memset(buffer, 0, 2048);
 		int ret = recvSocket(buffer, 2048);
 		data = string(buffer);
 		return ret;
@@ -132,16 +152,32 @@ public:
 		connectSock.setSocket(s);
 	}
 
+	void setRecvTimeout(int seconds)
+	{
+		if (connectSock.setRecvTimeout(seconds) < 0) {
+			perror("setsockopt");
+			exit(-1);
+		}
+	}
+
+	void setSendTimeout(int seconds)
+	{
+		if (connectSock.setSendTimeout(seconds) < 0) {
+			perror("setsockopt");
+			exit(-1);
+		}
+	}
+
 	void sendMessage(const string& message) const
 	{
 		connectSock.sendSocket(message);
 	}
 
-	string getMessage(void) const
+	bool getMessage(string& message) const
 	{
-		string message;
-		connectSock.recvSocket(message);
-		return message;
+		if (connectSock.recvSocket(message) < 0)
+			return false;
+		return true;
 	}
 
 protected:
