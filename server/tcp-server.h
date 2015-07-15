@@ -18,7 +18,7 @@ public:
 
 	void accept(void)
 	{
-		serverSock.acceptSocket();
+		serverSock.acceptSocket(connectSock);
 		cout << "connected" << endl;
 	}
 
@@ -26,10 +26,10 @@ public:
 	{
 		while (1) {
 			string message;
-			if (serverSock.getMessage(message)) {
+			if (connectSock.recvSocket(message)) {
 				cout << "got message: " << message << endl;
 			} else {
-				serverSock.closeSocket();
+				connectSock.closeSocket();
 				cout << "disconnected" << endl;
 				break;
 			}
@@ -38,6 +38,7 @@ public:
 
 private:
 	ServerTCPSocket serverSock;
+	TCPSocket connectSock;
 };
 
 }

@@ -25,7 +25,7 @@ public:
 		string message;
 		while (1) {
 			cin >> message;
-			clientSock.sendMessage(message);
+			clientSock.sendSocket(message);
 		}
 	}
 

@@ -66,22 +66,28 @@ public:
 		addr.sin_port = htons(port);
 	}
 
-	int setRecvTimeout(int seconds)
+	void setRecvTimeout(int seconds)
 	{
 		timeval timeout;
 		timeout.tv_sec = seconds;
 		timeout.tv_usec = 0;
-		return setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-				(char*)&timeout, sizeof(timeout));
+		if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+				(char*)&timeout, sizeof(timeout)) < 0) {
+			perror("setsockopt");
+			exit(-1);
+		}
 	}
 
-	int setSendTimeout(int seconds)
+	void setSendTimeout(int seconds)
 	{
 		timeval timeout;
 		timeout.tv_sec = seconds;
 		timeout.tv_usec = 0;
-		return setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO,
-				(char*)&timeout, sizeof(timeout));
+		if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO,
+				(char*)&timeout, sizeof(timeout)) < 0) {
+			perror("setsockopt");
+			exit(-1);
+		}
 	}
 
 	int sendSocket(const char* data, int len) const
@@ -89,9 +95,11 @@ public:
 		return send(sock, data, len, 0);
 	}
 
-	int sendSocket(const string& data) const
+	bool sendSocket(const string& data) const
 	{
-		return sendSocket(data.c_str(), data.size());
+		if (sendSocket(data.c_str(), data.size()) < 0)
+			return false;
+		return true;
 	}
 
 	int recvSocket(char* data, int len) const
@@ -99,18 +107,22 @@ public:
 		return recv(sock, data, len, 0);
 	}
 
-	int recvSocket(string& data) const
+	bool recvSocket(string& data) const
 	{
 		char buffer[2048];
 		memset(buffer, 0, 2048);
-		int ret = recvSocket(buffer, 2048);
+		if (recvSocket(buffer, 2048) <= 0)
+			return false;
 		data = string(buffer);
-		return ret;
+		return true;
 	}
 
-	int closeSocket(void)
+	void closeSocket(void)
 	{
-		return close(sock);
+		if (close(sock) < 0) {
+			perror("close");
+			exit(-1);
+		}
 	}
 
 	int operator == (const TCPSocket& s) const
@@ -127,7 +139,7 @@ class ServerTCPSocket : public TCPSocket {
 public:
 	ServerTCPSocket(int port, int listeners)
 	{
-		maxThreads = listeners;
+		listeners;
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		acceptLen = sizeof(acceptAddr);
 		setPort(port);
@@ -137,7 +149,7 @@ public:
 			exit(-1);
 		}
 
-		if (listen(sock, maxThreads)) {
+		if (listen(sock, listeners)) {
 			perror("listen");
 			exit(-1);
 		}
@@ -148,7 +160,7 @@ public:
 		closeSocket();
 	}
 
-	void acceptSocket(void)
+	void acceptSocket(TCPSocket& connectSock)
 	{
 		int s = accept(sock, (sockaddr*)&acceptAddr, &acceptLen);
 		if (s < 0) {
@@ -158,44 +170,9 @@ public:
 		connectSock.setSocket(s);
 	}
 
-	void closeSocket(void)
-	{
-		connectSock.closeSocket();
-	}
-
-	void setRecvTimeout(int seconds)
-	{
-		if (connectSock.setRecvTimeout(seconds) < 0) {
-			perror("setsockopt");
-			exit(-1);
-		}
-	}
-
-	void setSendTimeout(int seconds)
-	{
-		if (connectSock.setSendTimeout(seconds) < 0) {
-			perror("setsockopt");
-			exit(-1);
-		}
-	}
-
-	void sendMessage(const string& message) const
-	{
-		connectSock.sendSocket(message);
-	}
-
-	bool getMessage(string& message) const
-	{
-		if (connectSock.recvSocket(message) <= 0)
-			return false;
-		return true;
-	}
-
 protected:
-	TCPSocket connectSock;
 	sockaddr_in acceptAddr;
 	socklen_t acceptLen;
-	unsigned int maxThreads;
 };
 
 class ClientTCPSocket : public TCPSocket {
@@ -212,18 +189,6 @@ public:
 			perror("connect");
 			exit(-1);
 		}
-	}
-
-	void sendMessage(const string& message)
-	{
-		sendSocket(message);
-	}
-
-	string getMessage(void)
-	{
-		string message;
-		recvSocket(message);
-		return message;
 	}
 };
 
