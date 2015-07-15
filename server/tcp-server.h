@@ -1,7 +1,7 @@
 #ifndef _GS_TCP_SERVER_H_
 #define _GS_TCP_SERVER_H_
 
-#include "tcp-socket.h"
+#include "../tcp-socket.h"
 
 #include <iostream>
 
