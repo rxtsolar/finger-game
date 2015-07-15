@@ -134,6 +134,13 @@ public:
 		return sock == s.sock;
 	}
 
+	TCPSocket& operator = (const TCPSocket& s)
+	{
+		sock = s.sock;
+		memcpy(&addr, &s.addr, sizeof(addr));
+		return *this;
+	}
+
 	int sock;
 	sockaddr_in addr;
 };
