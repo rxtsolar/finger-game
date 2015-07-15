@@ -141,6 +141,11 @@ public:
 		return *this;
 	}
 
+	bool operator < (const TCPSocket& s) const
+	{
+		return sock < s.sock;
+	}
+
 	int sock;
 	sockaddr_in addr;
 };
