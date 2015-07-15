@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <thread>
+#include <vector>
 
 namespace gs {
 
@@ -12,14 +13,14 @@ using namespace std;
 
 class TCPServer {
 public:
-	TCPServer(void) : serverSock(2564, 1)
+	TCPServer(unsigned int n) : maxThreads(n), serverSock(2564, n)
 	{
 	}
 
 	void accept(void)
 	{
 		serverSock.acceptSocket(connectSock);
-		cout << "connected" << endl;
+		cout << "connected to " << connectSock.getIP() << endl;
 	}
 
 	void loop(void)
@@ -30,7 +31,7 @@ public:
 				cout << "got message: " << message << endl;
 			} else {
 				connectSock.closeSocket();
-				cout << "disconnected" << endl;
+				cout << "disconnected from " << connectSock.getIP() << endl;
 				break;
 			}
 		}
@@ -39,6 +40,7 @@ public:
 private:
 	ServerTCPSocket serverSock;
 	TCPSocket connectSock;
+	unsigned int maxThreads;
 };
 
 }

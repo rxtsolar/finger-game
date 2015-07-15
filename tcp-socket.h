@@ -40,16 +40,6 @@ public:
 		}
 	}
 
-	void setSocket(int fd)
-	{
-		sock = fd;
-	}
-
-	int getSocket(void) const
-	{
-		return sock;
-	}
-
 	bool setIP(const string& ip)
 	{
 		hostent* hostName = gethostbyname(ip.c_str());
@@ -61,9 +51,23 @@ public:
 		return true;
 	}
 
+	string getIP(void)
+	{
+		string ip;
+		char buffer[INET_ADDRSTRLEN];
+		memset(buffer, 0, INET_ADDRSTRLEN);
+		ip = inet_ntop(AF_INET, &addr.sin_addr.s_addr, buffer, INET_ADDRSTRLEN);
+		return ip;
+	}
+
 	void setPort(int port)
 	{
 		addr.sin_port = htons(port);
+	}
+
+	int getPort(void)
+	{
+		return addr.sin_port;
 	}
 
 	void setRecvTimeout(int seconds)
@@ -127,10 +131,9 @@ public:
 
 	int operator == (const TCPSocket& s) const
 	{
-		return sock == s.getSocket();
+		return sock == s.sock;
 	}
 
-protected:
 	int sock;
 	sockaddr_in addr;
 };
@@ -141,7 +144,6 @@ public:
 	{
 		listeners;
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		acceptLen = sizeof(acceptAddr);
 		setPort(port);
 
 		if (bind(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {
@@ -162,17 +164,14 @@ public:
 
 	void acceptSocket(TCPSocket& connectSock)
 	{
-		int s = accept(sock, (sockaddr*)&acceptAddr, &acceptLen);
+		socklen_t len = sizeof(connectSock.addr);
+		int s = accept(sock, (sockaddr*)&connectSock.addr, &len);
 		if (s < 0) {
 			perror("accept");
 			exit(-1);
 		}
-		connectSock.setSocket(s);
+		connectSock.sock = s;
 	}
-
-protected:
-	sockaddr_in acceptAddr;
-	socklen_t acceptLen;
 };
 
 class ClientTCPSocket : public TCPSocket {

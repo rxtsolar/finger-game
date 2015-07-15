@@ -4,7 +4,7 @@ using namespace gs;
 
 int main(void)
 {
-	TCPServer server;
+	TCPServer server(2);
 	while (1) {
 		server.accept();
 		server.loop();
