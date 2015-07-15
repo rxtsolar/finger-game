@@ -175,7 +175,7 @@ public:
 
 	bool getMessage(string& message) const
 	{
-		if (connectSock.recvSocket(message) < 0)
+		if (connectSock.recvSocket(message) <= 0)
 			return false;
 		return true;
 	}
