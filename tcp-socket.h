@@ -21,23 +21,18 @@ class TCPSocket {
 public:
 	TCPSocket(void)
 	{
-		addr.sin_family = AF_INET;
-		sock = socket(AF_INET, SOCK_STREAM, 0);
-		if (sock < 0) {
-			perror("socket");
-			exit(-1);
-		}
+		createSocket();
 	}
 
-	TCPSocket(int fd)
+	TCPSocket(int s, const sockaddr_in& a)
 	{
-		sock = fd;
-		addr.sin_family = AF_INET;
-		sock = socket(AF_INET, SOCK_STREAM, 0);
-		if (sock < 0) {
-			perror("socket");
-			exit(-1);
-		}
+		sock = s;
+		memcpy(&addr, &a, sizeof(addr));
+	}
+
+	~TCPSocket(void)
+	{
+		closeSocket();
 	}
 
 	bool setIP(const string& ip)
@@ -115,10 +110,25 @@ public:
 	{
 		char buffer[2048];
 		memset(buffer, 0, 2048);
-		if (recvSocket(buffer, 2048) <= 0)
+		int ret = recvSocket(buffer, 2048);
+		cerr << ret << endl;
+		if (ret <= 0) {
+		/*if (recvSocket(buffer, 2048) <= 0)*/
+			perror("recv");
 			return false;
+		}
 		data = string(buffer);
 		return true;
+	}
+
+	void createSocket(void)
+	{
+		addr.sin_family = AF_INET;
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock < 0) {
+			perror("socket");
+			exit(-1);
+		}
 	}
 
 	void closeSocket(void)
@@ -127,23 +137,6 @@ public:
 			perror("close");
 			exit(-1);
 		}
-	}
-
-	int operator == (const TCPSocket& s) const
-	{
-		return sock == s.sock;
-	}
-
-	TCPSocket& operator = (const TCPSocket& s)
-	{
-		sock = s.sock;
-		memcpy(&addr, &s.addr, sizeof(addr));
-		return *this;
-	}
-
-	bool operator < (const TCPSocket& s) const
-	{
-		return sock < s.sock;
 	}
 
 	int sock;
@@ -169,20 +162,18 @@ public:
 		}
 	}
 
-	~ServerTCPSocket(void)
+	TCPSocket* acceptSocket(void)
 	{
-		closeSocket();
-	}
-
-	void acceptSocket(TCPSocket& connectSock)
-	{
-		socklen_t len = sizeof(connectSock.addr);
-		int s = accept(sock, (sockaddr*)&connectSock.addr, &len);
+		TCPSocket* connectSock;
+		sockaddr_in a;
+		socklen_t len = sizeof(a);
+		int s = accept(sock, (sockaddr*)&a, &len);
 		if (s < 0) {
 			perror("accept");
 			exit(-1);
 		}
-		connectSock.sock = s;
+		connectSock = new TCPSocket(s, a);
+		return connectSock;
 	}
 };
 

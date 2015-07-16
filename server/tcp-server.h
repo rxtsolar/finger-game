@@ -4,6 +4,7 @@
 #include "../tcp-socket.h"
 
 #include <iostream>
+#include <mutex>
 #include <thread>
 #include <set>
 
@@ -25,34 +26,34 @@ public:
 
 private:
 	ServerTCPSocket serverSock;
-	set<TCPSocket> connectedSocks;
+	set<TCPSocket*> connectedSocks;
 	mutex lock;
 
 	void accept(void)
 	{
-		TCPSocket sock;
-		serverSock.acceptSocket(sock);
+		TCPSocket* sock;
 		lock.lock();
+		sock = serverSock.acceptSocket();
 		connectedSocks.insert(sock);
 		lock.unlock();
-		cout << "connected to " << sock.getIP() << endl;
+		cout << "connected to " << sock->getIP() << endl;
 
 		thread t(&TCPServer::loop, this, sock);
 		t.detach();
 	}
 
-	void loop(TCPSocket& sock)
+	void loop(TCPSocket* sock)
 	{
 		while (1) {
 			string message;
-			if (sock.recvSocket(message)) {
+			if (sock->recvSocket(message)) {
 				cout << "got message: " << message << endl;
 			} else {
+				cout << "disconnected from " << sock->getIP() << endl;
 				lock.lock();
 				connectedSocks.erase(sock);
+				delete sock;
 				lock.unlock();
-				sock.closeSocket();
-				cout << "disconnected from " << sock.getIP() << endl;
 				break;
 			}
 		}
