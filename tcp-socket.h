@@ -147,7 +147,6 @@ class ServerTCPSocket : public TCPSocket {
 public:
 	ServerTCPSocket(int port, int listeners)
 	{
-		listeners;
 		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		setPort(port);
 
