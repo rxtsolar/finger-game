@@ -5,6 +5,6 @@ using namespace gs;
 int main(void)
 {
 	TCPServer server;
-	server.serve();
+	server.run();
 	return 0;
 }
