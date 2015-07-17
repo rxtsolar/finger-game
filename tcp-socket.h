@@ -110,13 +110,8 @@ public:
 	{
 		char buffer[2048];
 		memset(buffer, 0, 2048);
-		int ret = recvSocket(buffer, 2048);
-		cerr << ret << endl;
-		if (ret <= 0) {
-		/*if (recvSocket(buffer, 2048) <= 0)*/
-			perror("recv");
+		if (recvSocket(buffer, 2048) <= 0)
 			return false;
-		}
 		data = string(buffer);
 		return true;
 	}
