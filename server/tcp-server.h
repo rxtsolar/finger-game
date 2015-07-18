@@ -2,6 +2,7 @@
 #define _GS_TCP_SERVER_H_
 
 #include "../tcp-socket.h"
+#include "game.h"
 
 #include <iostream>
 #include <mutex>
@@ -53,42 +54,19 @@ private:
 
 	void start(TCPSocket* sock0, TCPSocket* sock1)
 	{
-		string message;
-		message = string("MESSAGE:paired with ").append(sock0->getIP()).append("\n");
-		sock0->sendSocket(message);
-		message = string("MESSAGE:paired with ").append(sock1->getIP()).append("\n");
-		sock1->sendSocket(message);
+		Game game(sock0, sock1);
 
-		usleep(500);
-		message = string("ACTION:quit").append("\n");
-		sock0->sendSocket(message);
-		sock1->sendSocket(message);
-		usleep(500);
+		game.run();
+
 		lock.lock();
 		connectedSocks.erase(sock0);
 		connectedSocks.erase(sock1);
 		delete sock0;
 		delete sock1;
 		lock.unlock();
+
 		cout << "disconnected from " << sock0->getIP() << " and "
 			<< sock1->getIP() << endl;
-	}
-
-	void loop(TCPSocket* sock)
-	{
-		while (1) {
-			string message;
-			if (sock->recvSocket(message)) {
-				cout << "got message: " << message << endl;
-			} else {
-				cout << "disconnected from " << sock->getIP() << endl;
-				lock.lock();
-				connectedSocks.erase(sock);
-				delete sock;
-				lock.unlock();
-				break;
-			}
-		}
 	}
 };
 

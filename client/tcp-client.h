@@ -2,6 +2,7 @@
 #define _GS_TCP_CLIENT_H_
 
 #include "../tcp-socket.h"
+#include "game.h"
 
 #include <iostream>
 #include <sstream>
@@ -12,40 +13,20 @@ using namespace std;
 
 class TCPClient {
 public:
-	TCPClient(const string& ip) : clientSock(ip, 2564), running(true)
+	TCPClient(const string& ip) : clientSock(ip, 2564)
 	{
+		clientSock.connectSocket();
 	}
 
 	void run(void)
 	{
-		string message;
-		clientSock.connectSocket();
-		while (running) {
-			clientSock.recvSocket(message);
-			parse(message);
-		}
+		Game game(&clientSock);
+
+		game.run();
 	}
 
 private:
 	ClientTCPSocket clientSock;
-	bool running;
-
-	void parse(const string& command)
-	{
-		stringstream ss(command);
-		string type;
-		string data;
-		getline(ss, type, ':');
-		getline(ss, data);
-		if (type == "MESSAGE") {
-			cout << data << endl;
-		} else if (type == "ACTION") {
-			if (data == "quit") {
-				cout << "terminating" << endl;
-				running = false;
-			}
-		}
-	}
 };
 
 }
